@@ -5,5 +5,6 @@ import { ApiCacheService } from './api-cache.service';
 @Module({
     imports: [CacheModule.register(), HttpModule],
     providers: [ApiCacheService],
+    exports: [ApiCacheService],
 })
 export class ApiCacheModule {}

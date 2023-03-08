@@ -71,7 +71,10 @@ describe('ApiCacheService', () => {
 
             expect(result).toEqual(apiResponseData);
             expect(cacheManager.get).toBeCalledWith('sportsen-gb');
-            expect(httpService.axiosRef.get).toBeCalled();
+
+            expect(httpService.axiosRef.get).toBeCalledWith(
+                `https://partners.betvictor.mobi/en-gb/in-play/1/events`,
+            );
             expect(cacheManager.set).toBeCalledWith(
                 'sportsen-gb',
                 apiResponseData,
