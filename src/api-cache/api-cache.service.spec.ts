@@ -54,7 +54,7 @@ describe('ApiCacheService', () => {
 
             const result = await service.getData();
 
-            expect(cacheManager.get).toBeCalledWith('sports');
+            expect(cacheManager.get).toBeCalledWith('sportsen-gb');
             expect(httpService.axiosRef.get).not.toBeCalled();
             expect(cacheManager.set).not.toBeCalled();
             expect(result).toEqual(cachedData);
@@ -70,9 +70,12 @@ describe('ApiCacheService', () => {
             const result = await service.getData();
 
             expect(result).toEqual(apiResponseData);
-            expect(cacheManager.get).toBeCalledWith('sports');
+            expect(cacheManager.get).toBeCalledWith('sportsen-gb');
             expect(httpService.axiosRef.get).toBeCalled();
-            expect(cacheManager.set).toBeCalledWith('sports', apiResponseData);
+            expect(cacheManager.set).toBeCalledWith(
+                'sportsen-gb',
+                apiResponseData,
+            );
         });
     });
 });
