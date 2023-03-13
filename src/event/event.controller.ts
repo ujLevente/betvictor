@@ -26,10 +26,10 @@ export class EventController {
         )
         sportId: number,
     ) {
-        return this.eventService.findAll();
+        return this.eventService.findBySportId(sportId);
     }
 
-    @Get('sports/:sportId/events/:event')
+    @Get('sports/:sportId/events/:eventId')
     findOne(
         @Param(
             'sportId',
@@ -39,13 +39,13 @@ export class EventController {
         )
         sportId: number,
         @Param(
-            'sportId',
+            'eventId',
             new ParseIntPipe({
                 errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE,
             }),
         )
         eventId: number,
     ) {
-        return this.eventService.findAll();
+        return this.eventService.findEvent(sportId, eventId);
     }
 }

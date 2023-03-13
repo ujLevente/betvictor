@@ -18,4 +18,32 @@ export class EventService {
 
         return events;
     }
+
+    async findBySportId(sportId: number) {
+        const data = await this.apiCacheService.getData();
+        const sport = data.result.sports.find((sport) => sport.id === sportId);
+
+        return sport.comp.flatMap((competition) => competition.events);
+    }
+
+    async findEvent(sportId: number, eventId: number) {
+        const data = await this.apiCacheService.getData();
+        const sport = data.result.sports.find((sport) => sport.id === sportId);
+
+        let result;
+
+        console.log(eventId);
+        sport.comp.forEach((competition) => {
+            const event = competition.events.find(
+                (event) => event.id === eventId,
+            );
+
+            if (event) {
+                result = event;
+                return;
+            }
+        });
+
+        return result;
+    }
 }
