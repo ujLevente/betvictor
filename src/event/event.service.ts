@@ -1,12 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import {
+    CACHE_MANAGER,
+    Inject,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
+import { Cache } from 'cache-manager';
 import { ApiCacheService } from 'src/api-cache/api-cache.service';
 
 @Injectable()
 export class EventService {
-    constructor(private readonly apiCacheService: ApiCacheService) {}
+    constructor(
+        private readonly apiCacheService: ApiCacheService,
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    ) {}
 
-    async findAll() {
+    async findAll(uri: string) {
+        const cachedEvents = await this.cacheManager.get(uri);
+
+        if (cachedEvents) {
+            return cachedEvents;
+        }
+
         const data = await this.apiCacheService.getData();
+
         const events = [];
 
         data.result.sports.forEach((sport) => {
@@ -16,19 +32,46 @@ export class EventService {
             );
         }, []);
 
+        this.cacheManager.set(uri, events);
+
         return events;
     }
 
-    async findBySportId(sportId: number) {
+    async findBySportId(sportId: number, uri: string) {
+        const cachedEvents = await this.cacheManager.get(uri);
+
+        if (cachedEvents) {
+            return cachedEvents;
+        }
+
         const data = await this.apiCacheService.getData();
+
         const sport = data.result.sports.find((sport) => sport.id === sportId);
 
-        return sport.comp.flatMap((competition) => competition.events);
+        if (!sport) {
+            throw new NotFoundException('invalid sport id');
+        }
+
+        const events = sport.comp.flatMap((competition) => competition.events);
+
+        this.cacheManager.set(uri, events);
+
+        return events;
     }
 
-    async findEvent(sportId: number, eventId: number) {
+    async findEvent(sportId: number, eventId: number, uri: string) {
+        const cachedEvents = await this.cacheManager.get(uri);
+
+        if (cachedEvents) {
+            return cachedEvents;
+        }
+
         const data = await this.apiCacheService.getData();
         const sport = data.result.sports.find((sport) => sport.id === sportId);
+
+        if (!sport) {
+            throw new NotFoundException('invalid sport id');
+        }
 
         let result;
 
@@ -42,6 +85,12 @@ export class EventService {
                 return;
             }
         });
+
+        if (!result) {
+            throw new NotFoundException('invalid event id');
+        }
+
+        this.cacheManager.set(uri, result);
 
         return result;
     }

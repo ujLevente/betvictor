@@ -4,6 +4,7 @@ import {
     HttpStatus,
     Param,
     ParseIntPipe,
+    Req,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 
@@ -12,8 +13,8 @@ export class EventController {
     constructor(private readonly eventService: EventService) {}
 
     @Get('sports/events')
-    findAll() {
-        return this.eventService.findAll();
+    findAll(@Req() request: Request) {
+        return this.eventService.findAll(request.url);
     }
 
     @Get('sports/:sportId/events')
@@ -25,8 +26,9 @@ export class EventController {
             }),
         )
         sportId: number,
+        @Req() request: Request,
     ) {
-        return this.eventService.findBySportId(sportId);
+        return this.eventService.findBySportId(sportId, request.url);
     }
 
     @Get('sports/:sportId/events/:eventId')
@@ -45,7 +47,8 @@ export class EventController {
             }),
         )
         eventId: number,
+        @Req() request: Request,
     ) {
-        return this.eventService.findEvent(sportId, eventId);
+        return this.eventService.findEvent(sportId, eventId, request.url);
     }
 }

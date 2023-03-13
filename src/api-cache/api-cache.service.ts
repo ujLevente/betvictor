@@ -8,6 +8,7 @@ export class ApiCacheService {
     private readonly CACHE_KEY_BASE = 'sports';
     private readonly API_URL =
         'https://partners.betvictor.mobi/en-gb/in-play/1/events';
+    private readonly CASH_EXPIRATION_IN_MS = 600000;
 
     constructor(
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -22,11 +23,18 @@ export class ApiCacheService {
             return cachedData;
         }
 
+        // reset all cached keys if cached api data expired
+        await this.cacheManager.reset();
+
         const apiResponse = await this.httpService.axiosRef.get(
             `https://partners.betvictor.mobi/${language}/in-play/1/events`,
         );
 
-        await this.cacheManager.set(key, apiResponse.data);
+        await this.cacheManager.set(
+            key,
+            apiResponse.data,
+            this.CASH_EXPIRATION_IN_MS,
+        );
 
         return apiResponse.data;
     }

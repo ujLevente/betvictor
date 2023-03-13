@@ -1,9 +1,9 @@
 import { HttpModule } from '@nestjs/axios';
-import { CacheModule, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ApiCacheService } from './api-cache.service';
 
 @Module({
-    imports: [CacheModule.register(), HttpModule],
+    imports: [HttpModule],
     providers: [ApiCacheService],
     exports: [ApiCacheService],
 })
