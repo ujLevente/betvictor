@@ -28,7 +28,7 @@ export class EventController {
         sportId: number,
         @Req() request: Request,
     ) {
-        return this.eventService.findBySportId(sportId, request.url);
+        return this.eventService.findEventsBySportId(sportId, request.url);
     }
 
     @Get('sports/:sportId/events/:eventId')

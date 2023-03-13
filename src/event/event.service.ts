@@ -5,7 +5,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { Cache } from 'cache-manager';
-import { ApiCacheService } from 'src/api-cache/api-cache.service';
+import { ApiCacheService } from '../api-cache/api-cache.service';
 
 @Injectable()
 export class EventService {
@@ -37,7 +37,7 @@ export class EventService {
         return events;
     }
 
-    async findBySportId(sportId: number, uri: string) {
+    async findEventsBySportId(sportId: number, uri: string) {
         const cachedEvents = await this.cacheManager.get(uri);
 
         if (cachedEvents) {
