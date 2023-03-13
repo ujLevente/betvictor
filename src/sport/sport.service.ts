@@ -6,7 +6,8 @@ import { ApiCacheService } from '../api-cache/api-cache.service';
 export class SportService {
     constructor(private readonly apiCacheService: ApiCacheService) {}
 
-    findAll(lang: LanguageType) {
-        return this.apiCacheService.getData(lang);
+    async findAll(lang: LanguageType) {
+        const data = await this.apiCacheService.getData(lang);
+        return data.result.sports;
     }
 }
