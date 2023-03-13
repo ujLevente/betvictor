@@ -34,7 +34,7 @@ describe('SportService', () => {
 
     describe('findAll', () => {
         const lang = 'zh';
-        const expectedResult = ['sport1', 'sport2'];
+        const expectedResult = { result: { sports: ['sport1', 'sport2'] } };
 
         beforeEach(() => {
             jest.spyOn(apiCacheService, 'getData').mockResolvedValueOnce(
@@ -57,9 +57,15 @@ describe('SportService', () => {
         );
 
         it('should return the data returned by apiCacheService.getData', async () => {
+            const mockData = { result: { sports: ['sport1', 'sport2'] } };
+
+            jest.spyOn(apiCacheService, 'getData').mockResolvedValueOnce(
+                mockData,
+            );
+
             const result = await service.findAll(lang);
 
-            expect(result).toEqual(expectedResult);
+            expect(result).toEqual(mockData.result.sports);
         });
     });
 });
