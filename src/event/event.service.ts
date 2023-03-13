@@ -32,7 +32,6 @@ export class EventService {
 
         let result;
 
-        console.log(eventId);
         sport.comp.forEach((competition) => {
             const event = competition.events.find(
                 (event) => event.id === eventId,
