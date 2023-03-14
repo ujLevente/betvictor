@@ -199,7 +199,7 @@ describe('EventService', () => {
             expect(cacheManager.set).not.toBeCalled();
         });
 
-        it('should return events and cache them if not cached', async () => {
+        it('should return event and cache it if not cached', async () => {
             const mockSportId = 123;
             const mockEventId = 1;
             const mockUri = '/sports/123/events/1';
