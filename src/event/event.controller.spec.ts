@@ -10,7 +10,16 @@ describe('EventController', () => {
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             controllers: [EventController],
-            providers: [EventService],
+            providers: [
+                {
+                    provide: EventService,
+                    useValue: {
+                        findAll: jest.fn(),
+                        findEventsBySportId: jest.fn(),
+                        findEvent: jest.fn(),
+                    },
+                },
+            ],
         }).compile();
 
         controller = module.get<EventController>(EventController);
@@ -32,7 +41,7 @@ describe('EventController', () => {
 
             const result = await controller.findAll(request as any);
 
-            expect(eventService.findAll).toHaveBeenCalledWith(request.url);
+            expect(eventService.findAll).toBeCalledWith(request.url);
             expect(result).toEqual(expected);
         });
     });
@@ -54,7 +63,7 @@ describe('EventController', () => {
                 request as any,
             );
 
-            expect(eventService.findEventsBySportId).toHaveBeenCalledWith(
+            expect(eventService.findEventsBySportId).toBeCalledWith(
                 sportId,
                 request.url,
             );
@@ -79,7 +88,7 @@ describe('EventController', () => {
                 request as any,
             );
 
-            expect(eventService.findEvent).toHaveBeenCalledWith(
+            expect(eventService.findEvent).toBeCalledWith(
                 sportId,
                 eventId,
                 request.url,
