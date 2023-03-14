@@ -4,6 +4,27 @@ import { Cache } from 'cache-manager';
 import { ApiCacheService } from '../api-cache/api-cache.service';
 import { EventService } from './event.service';
 
+const MOCK_DATA = {
+    result: {
+        sports: [
+            {
+                id: 123,
+                comp: [
+                    { events: [{ id: 1, name: 'Event 1' }] },
+                    { events: [{ id: 2, name: 'Event 2' }] },
+                ],
+            },
+            {
+                id: 456,
+                comp: [
+                    { events: [{ id: 3, name: 'Event 3' }] },
+                    { events: [{ id: 4, name: 'Event 4' }] },
+                ],
+            },
+        ],
+    },
+};
+
 describe('EventService', () => {
     let eventService: EventService;
     let apiCacheService: ApiCacheService;
@@ -50,44 +71,28 @@ describe('EventService', () => {
         });
 
         it('should return all events and cache them', async () => {
-            const data = {
-                result: {
-                    sports: [
-                        {
-                            id: 1,
-                            name: 'sport 1',
-                            comp: [
-                                {
-                                    id: 1,
-                                    name: 'competition 1',
-                                    events: [
-                                        { id: 1, name: 'event 1' },
-                                        { id: 2, name: 'event 2' },
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-            jest.spyOn(apiCacheService, 'getData').mockResolvedValue(data);
+            const expectedResult = [
+                { id: 1, name: 'Event 1' },
+                { id: 2, name: 'Event 2' },
+                { id: 3, name: 'Event 3' },
+                { id: 4, name: 'Event 4' },
+            ];
+
+            jest.spyOn(apiCacheService, 'getData').mockResolvedValue(MOCK_DATA);
             jest.spyOn(cacheManager, 'get').mockResolvedValue(null);
 
             const result = await eventService.findAll('sports/events');
 
-            expect(result).toEqual([
-                { id: 1, name: 'event 1' },
-                { id: 2, name: 'event 2' },
-            ]);
-            expect(cacheManager.set).toHaveBeenCalledWith('sports/events', [
-                { id: 1, name: 'event 1' },
-                { id: 2, name: 'event 2' },
-            ]);
+            expect(result).toEqual(expectedResult);
+            expect(cacheManager.set).toHaveBeenCalledWith(
+                'sports/events',
+                expectedResult,
+            );
         });
     });
 
     describe('findEventsBySportId', () => {
-        it('should return cached events if they exist', async () => {
+        it('should return cached events if available', async () => {
             const mockSportId = 123;
             const mockUri = '/sports/123/events';
             const mockEvents = [
@@ -107,16 +112,11 @@ describe('EventService', () => {
         });
 
         it('should throw NotFoundException if given an invalid sportId', async () => {
-            const mockSportId = 456;
-            const mockUri = '/sports/456/events';
-            const mockData = {
-                result: {
-                    sports: [{ id: 123, comp: [{ events: [] }] }],
-                },
-            };
+            const mockSportId = 200;
+            const mockUri = '/sports/200/events';
 
             jest.spyOn(apiCacheService, 'getData').mockResolvedValueOnce(
-                mockData,
+                MOCK_DATA,
             );
 
             expect(
@@ -128,29 +128,13 @@ describe('EventService', () => {
         it('should return events and cache them if not cached', async () => {
             const mockSportId = 123;
             const mockUri = '/sports/123/events';
-            const mockData = {
-                result: {
-                    sports: [
-                        {
-                            id: 123,
-                            comp: [
-                                { events: [{ id: 1, name: 'Event 1' }] },
-                                { events: [{ id: 2, name: 'Event 2' }] },
-                            ],
-                        },
-                        {
-                            id: 456,
-                            comp: [
-                                { events: [{ id: 3, name: 'Event 3' }] },
-                                { events: [{ id: 4, name: 'Event 4' }] },
-                            ],
-                        },
-                    ],
-                },
-            };
+            const expectedResult = [
+                { id: 1, name: 'Event 1' },
+                { id: 2, name: 'Event 2' },
+            ];
 
             jest.spyOn(apiCacheService, 'getData').mockResolvedValueOnce(
-                mockData,
+                MOCK_DATA,
             );
             jest.spyOn(cacheManager, 'set').mockResolvedValueOnce(undefined);
 
@@ -159,16 +143,83 @@ describe('EventService', () => {
                 mockUri,
             );
 
-            expect(result).toEqual([
-                { id: 1, name: 'Event 1' },
-                { id: 2, name: 'Event 2' },
-            ]);
+            expect(result).toEqual(expectedResult);
             expect(apiCacheService.getData).toBeCalled();
             expect(cacheManager.get).toBeCalledWith(mockUri);
-            expect(cacheManager.set).toBeCalledWith(mockUri, [
-                { id: 1, name: 'Event 1' },
-                { id: 2, name: 'Event 2' },
-            ]);
+            expect(cacheManager.set).toBeCalledWith(mockUri, expectedResult);
+        });
+    });
+
+    describe('findEvent', () => {
+        it('should return cached event if available', async () => {
+            const mockSportId = 123;
+            const mockEventId = 1;
+            const mockUri = '/sports/123/events/1';
+            const mockEvents = { id: 1, name: 'Event 1' };
+
+            jest.spyOn(cacheManager, 'get').mockResolvedValueOnce(mockEvents);
+
+            const result = await eventService.findEvent(
+                mockSportId,
+                mockEventId,
+                mockUri,
+            );
+
+            expect(result).toEqual(mockEvents);
+            expect(cacheManager.get).toBeCalledWith(mockUri);
+        });
+
+        it('should throw NotFoundException if given an invalid sportId', async () => {
+            const mockSportId = 200;
+            const mockEventId = 1;
+            const mockUri = '/sports/200/events/1';
+
+            jest.spyOn(apiCacheService, 'getData').mockResolvedValueOnce(
+                MOCK_DATA,
+            );
+
+            expect(
+                eventService.findEvent(mockSportId, mockEventId, mockUri),
+            ).rejects.toThrowError(NotFoundException);
+            expect(cacheManager.set).not.toBeCalled();
+        });
+
+        it('should throw NotFoundException if given an invalid eventId', async () => {
+            const mockSportId = 123;
+            const mockEventId = 11;
+            const mockUri = '/sports/123/events/11';
+
+            jest.spyOn(apiCacheService, 'getData').mockResolvedValueOnce(
+                MOCK_DATA,
+            );
+
+            expect(
+                eventService.findEvent(mockSportId, mockEventId, mockUri),
+            ).rejects.toThrowError(NotFoundException);
+            expect(cacheManager.set).not.toBeCalled();
+        });
+
+        it('should return events and cache them if not cached', async () => {
+            const mockSportId = 123;
+            const mockEventId = 1;
+            const mockUri = '/sports/123/events/1';
+            const expectedResult = { id: 1, name: 'Event 1' };
+
+            jest.spyOn(apiCacheService, 'getData').mockResolvedValueOnce(
+                MOCK_DATA,
+            );
+            jest.spyOn(cacheManager, 'set').mockResolvedValueOnce(undefined);
+
+            const result = await eventService.findEvent(
+                mockSportId,
+                mockEventId,
+                mockUri,
+            );
+
+            expect(result).toEqual(expectedResult);
+            expect(apiCacheService.getData).toBeCalled();
+            expect(cacheManager.get).toBeCalledWith(mockUri);
+            expect(cacheManager.set).toBeCalledWith(mockUri, expectedResult);
         });
     });
 });
